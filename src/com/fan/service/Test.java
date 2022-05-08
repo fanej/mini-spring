@@ -6,13 +6,13 @@ public class Test {
     public static void main(String[] args) {
         MiniApplicationContext applicationContext = new MiniApplicationContext(AppConfig.class);
 
-        UserService userService = (UserService) applicationContext.getBean("userService");
+        UserService userService = (UserService) applicationContext.getBean("userServiceImpl");
 
-        System.out.println(applicationContext.getBean("userService"));
-        System.out.println(applicationContext.getBean("userService"));
-        System.out.println(applicationContext.getBean("userService"));
-        System.out.println(applicationContext.getBean("userService"));
-        System.out.println(applicationContext.getBean("userService"));
+        System.out.println(applicationContext.getBean("userServiceImpl"));
+        System.out.println(applicationContext.getBean("userServiceImpl"));
+        System.out.println(applicationContext.getBean("userServiceImpl"));
+        System.out.println(applicationContext.getBean("userServiceImpl"));
+        System.out.println(applicationContext.getBean("userServiceImpl"));
 
         System.out.println(applicationContext.getBean("orderService"));
         System.out.println(applicationContext.getBean("orderService"));

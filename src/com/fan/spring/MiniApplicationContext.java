@@ -1,10 +1,14 @@
 package com.fan.spring;
 
+import javax.annotation.PostConstruct;
 import java.beans.Introspector;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,7 +17,7 @@ public class MiniApplicationContext {
     private Class configClass;
     private Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
     private Map<String, Object> singletonObjects = new ConcurrentHashMap<>();
-
+    private List<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
     public MiniApplicationContext(Class configClass) {
         this.configClass = configClass;
 
@@ -49,6 +53,24 @@ public class MiniApplicationContext {
                             //这是一个Bean
                             System.out.println("component: " + classname);
 
+                            //处理BeanPostProcessor
+                            if (BeanPostProcessor.class.isAssignableFrom(clazz)){
+                                BeanPostProcessor beanPostProcessor = null;
+                                try {
+                                    beanPostProcessor = (BeanPostProcessor) clazz.getConstructor().newInstance();
+                                } catch (InstantiationException e) {
+                                    e.printStackTrace();
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                } catch (InvocationTargetException e) {
+                                    e.printStackTrace();
+                                } catch (NoSuchMethodException e) {
+                                    e.printStackTrace();
+                                }
+                                beanPostProcessorList.add(beanPostProcessor);
+                                continue;
+                            }
+
                             //获取bean名字
                             Component componentAnnotation = (Component) clazz.getAnnotation(Component.class);
                             String beanName = componentAnnotation.value();
@@ -68,6 +90,9 @@ public class MiniApplicationContext {
                             }
 
                             beanDefinitionMap.put(beanName, beanDefinition);
+                        }
+                        if (clazz.isAnnotationPresent(Configuration.class)){
+                            System.out.println("Configuration 注解处理");
                         }
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
@@ -113,14 +138,28 @@ public class MiniApplicationContext {
                 }
             }
 
+            for(Method m:clazz.getDeclaredMethods()){
+                if (m.isAnnotationPresent(PostConstruct.class)){
+                    m.invoke(instance);
+                }
+            }
+
             //Aware回调
             if (instance instanceof BeanNameAware) {
                 ((BeanNameAware) instance).setBeanName(beanName);
             }
 
+            for (BeanPostProcessor beanPostProcessor:beanPostProcessorList){
+                instance = beanPostProcessor.postProcessBeforeInitialization(beanName,instance);
+            }
+
             //初始化
             if (instance instanceof InitializingBean) {
                 ((InitializingBean) instance).afterPropertiesSet();
+            }
+
+            for (BeanPostProcessor beanPostProcessor:beanPostProcessorList){
+                instance = beanPostProcessor.postProcessAfterInitialization(beanName,instance);
             }
 
             //BeanPostProcessor 初始化后 AOP

@@ -1,6 +1,6 @@
 package com.fan.spring;
 
 public interface BeanPostProcessor {
-    void postProcessBeforeInitialization(String beanName, Object bean);
-    void postProcessAfterInitialization(String beanName, Object bean);
+    Object postProcessBeforeInitialization(String beanName, Object bean);
+    Object postProcessAfterInitialization(String beanName, Object bean);
 }

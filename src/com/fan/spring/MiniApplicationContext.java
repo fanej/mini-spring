@@ -36,6 +36,7 @@ public class MiniApplicationContext {
             File file = new File(resource.getFile());
             System.out.println("path dictionary: " + file);
 
+            //扫描指定类目录
             if (file.isDirectory()) {
                 File[] files = file.listFiles();
 
